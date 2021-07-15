@@ -200,33 +200,33 @@ DWORD dw1stImage, DWORD dwLastImage, DWORD dwSynch, void* pBuf, DWORD dwLen,
 DWORD* dwStatus)
 
 b.) Input parameter:
-  · HANDLE ph: Handle to a previously opened camera device.
-  · HANDLE hEvent: Handle to an externally allocated event.
-  · DWORD dw1stImage: Set dw1stImage=dwLastImage=0 during record for actual
-image · DWORD dwLastImage: Set dw1stImage=dwLastImage=x after record for desired
-image · DWORD dwSynch: Synchronization paremeter, usually 0. · void *pBuf:
-Pointer to the buffer to receive the transferred image. · DWORD dwLen: Length of
-the buffer. · DWORD *dwStatus: Driver status.
+  Â· HANDLE ph: Handle to a previously opened camera device.
+  Â· HANDLE hEvent: Handle to an externally allocated event.
+  Â· DWORD dw1stImage: Set dw1stImage=dwLastImage=0 during record for actual
+image Â· DWORD dwLastImage: Set dw1stImage=dwLastImage=x after record for desired
+image Â· DWORD dwSynch: Synchronization paremeter, usually 0. Â· void *pBuf:
+Pointer to the buffer to receive the transferred image. Â· DWORD dwLen: Length of
+the buffer. Â· DWORD *dwStatus: Driver status.
 
   The input data should be filled with the following parameter:
-  · hEvent = externally created event used to signal an occurred transfer.
+  Â· hEvent = externally created event used to signal an occurred transfer.
 
-  · dw1stImage = set to 0 for live view mode("live view" transfers the most
+  Â· dw1stImage = set to 0 for live view mode("live view" transfers the most
 recent image to the PC for viewing / monitoring)
   - 0 = live view mode. x = set to the same value as dwLastImage. Has to be
 a valid image number (see PCO_GetNumberOfImagesInSegment, 1 .. max available).
 
-  · dwLastImage = set to 0 in preview mode.
+  Â· dwLastImage = set to 0 in preview mode.
   - 0 = live view mode. x = set to the same value as dw1stImage. Has to be a
 valid image number (see PCO_GetNumberOfImagesInSegment, 1 ... max available).
 
-  · dwSynch: set to 0.
-  · pBuf: Address of the first buffer element to which the image should be
-transferred. · dwLen: Length of the buffer in bytes. · dwStatus: Address of a
+  Â· dwSynch: set to 0.
+  Â· pBuf: Address of the first buffer element to which the image should be
+transferred. Â· dwLen: Length of the buffer in bytes. Â· dwStatus: Address of a
 DWORD to receive the buffer status.
 
   c.) Return value:
-  · int: Error message, 0 in case of success else less than 0: see Error /
+  Â· int: Error message, 0 in case of success else less than 0: see Error /
 Warning Codes
 ********************************************************************************************************/
 //===================================================================================================================
@@ -2006,11 +2006,6 @@ int BufferCtrlObj::_xferImagMult()
         // dwFrameIdxFirst in continuos mode (dwFrameIdxFirst == 0) is bypassed
         while (1)
         {
-            if ((_dwValidImageCnt > 0) &&
-                ((_dwValidImageCnt >= dwFrameIdxFirst) ||
-                 (dwFrameIdxFirst == 0)))
-                break;
-
             m_cam->_pco_GetNumberOfImagesInSegment(wSegment, _dwValidImageCnt,
                                                    _dwMaxImageCnt, error);
             if (error)
