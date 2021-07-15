@@ -2378,6 +2378,7 @@ int BufferCtrlObj::_xferImagDoubleImage()
     int error;
     int lima_buffer_nb;
     bool live_mode;
+    bool is_one_buffer_ready;
     int _nrStop;
     char msg[RING_LOG_BUFFER_SIZE + 1];
     const char *pmsg = msg;
@@ -2747,107 +2748,87 @@ int BufferCtrlObj::_xferImagDoubleImage()
             false,                        // wait for any object
             EVENT_WAIT_TMOUT_MS);         // ms wait
 
-        // The return value indicates which event is signaled
-
 #    if PCO_BUFFER_NREVENTS != 4
 #        error ============================================== ABORT - wrong nr of WAIT_OBJECT
 #    endif
 
-        switch (dwEvent)
+        if (dwEvent == WAIT_TIMEOUT)
         {
-            case WAIT_OBJECT_0 + 0:
-                m_allocBuff.bufferReady[0] = 1;
-                if (dbgWaitobj)
-                {
-                    pmsg = "... WAITOBJ 0 found";
-                    m_cam->m_tmpLog->add(pmsg);
-                    DEB_ALWAYS() << pmsg;
-                }
-                goto _RETRY;
-
-            case WAIT_OBJECT_0 + 1:
-                m_allocBuff.bufferReady[1] = 1;
-                if (dbgWaitobj)
-                {
-                    pmsg = "... WAITOBJ 1 found";
-                    m_cam->m_tmpLog->add(pmsg);
-                    DEB_ALWAYS() << pmsg;
-                }
-                goto _RETRY;
-
-            case WAIT_OBJECT_0 + 2:
-                m_allocBuff.bufferReady[2] = 1;
-                if (dbgWaitobj)
-                {
-                    pmsg = "... WAITOBJ 2 found";
-                    m_cam->m_tmpLog->add(pmsg);
-                    DEB_ALWAYS() << pmsg;
-                }
-                goto _RETRY;
-
-            case WAIT_OBJECT_0 + 3:
-                m_allocBuff.bufferReady[3] = 1;
-                if (dbgWaitobj)
-                {
-                    pmsg = "... WAITOBJ 3 found";
-                    m_cam->m_tmpLog->add(pmsg);
-                    DEB_ALWAYS() << pmsg;
-                }
-                goto _RETRY;
-
-            case WAIT_TIMEOUT:
+            maxWaitTimeout--;
+            if (dbgWaitobj)
             {
-                maxWaitTimeout--;
-                if (dbgWaitobj)
-                {
-                    m_cam->m_tmpLog->dumpPrint(true);
-                }
-
-                char errstr[MSG4K + 1];
-                char *ptr = errstr;
-                char *ptrMax = errstr + MSG4K;
-                const char *flag;
-                for (int _id = 0; _id < m_cam->m_pco_buffer_nrevents; _id++)
-                {
-                    flag = m_allocBuff.bufferAssignedFrameFirst[_id] ==
-                                   dwPcoFrameIdx
-                               ? "***"
-                               : "   ";
-                    ptr += __sprintfSExt(
-                        ptr, ptrMax - ptr,
-                        "\n%s [%d] pcoBuffNr[%d] ready[%d] limaFrame[%d] "
-                        "limaPtr[%p] limaPtr1[%p] pcoPtr[%p] limaSize[%d] "
-                        "pcoSize[%d]",
-                        flag, _id, m_allocBuff.pcoAllocBufferNr[_id],
-                        m_allocBuff.bufferReady[_id],
-                        m_allocBuff.bufferAssignedFrameFirst[_id],
-                        (void *)m_allocBuff.limaAllocBufferPtr[_id],
-                        (void *)m_allocBuff.limaAllocBufferPtr1[_id],
-                        (void *)m_allocBuff.pcoAllocBufferPtr[_id],
-                        m_allocBuff.dwLimaAllocBufferSize[_id],
-                        m_allocBuff.dwPcoAllocBufferSize[_id]);
-                }
-
-                if (maxWaitTimeout)
-                {
-                    DEB_ALWAYS()
-                        << "\nWAITOBJ ERROR - TIMEOUT - RETRY "
-                        << DEB_VAR2(maxWaitTimeout, dwPcoFrameIdx) << errstr;
-                    goto _RETRY_WAIT; // retry when >0 (counting down up to 0) /
-                                      // <0 infinite
-                }
-                else
-                {
-                    DEB_ALWAYS()
-                        << "\nWAITOBJ ERROR - TIMEOUT - ABORT "
-                        << DEB_VAR2(maxWaitTimeout, dwPcoFrameIdx) << errstr;
-                    return pcoAcqWaitTimeout;
-                }
+                m_cam->m_tmpLog->dumpPrint(true);
             }
 
-            default:
+            char errstr[MSG4K + 1];
+            char *ptr = errstr;
+            char *ptrMax = errstr + MSG4K;
+            const char *flag;
+            for (int _id = 0; _id < m_cam->m_pco_buffer_nrevents; _id++)
+            {
+                flag = m_allocBuff.bufferAssignedFrameFirst[_id] ==
+                                dwPcoFrameIdx
+                            ? "***"
+                            : "   ";
+                ptr += __sprintfSExt(
+                    ptr, ptrMax - ptr,
+                    "\n%s [%d] pcoBuffNr[%d] ready[%d] limaFrame[%d] "
+                    "limaPtr[%p] limaPtr1[%p] pcoPtr[%p] limaSize[%d] "
+                    "pcoSize[%d]",
+                    flag, _id, m_allocBuff.pcoAllocBufferNr[_id],
+                    m_allocBuff.bufferReady[_id],
+                    m_allocBuff.bufferAssignedFrameFirst[_id],
+                    (void *)m_allocBuff.limaAllocBufferPtr[_id],
+                    (void *)m_allocBuff.limaAllocBufferPtr1[_id],
+                    (void *)m_allocBuff.pcoAllocBufferPtr[_id],
+                    m_allocBuff.dwLimaAllocBufferSize[_id],
+                    m_allocBuff.dwPcoAllocBufferSize[_id]);
+            }
+
+            if (maxWaitTimeout)
+            {
+                DEB_ALWAYS()
+                    << "\nWAITOBJ ERROR - TIMEOUT - RETRY "
+                    << DEB_VAR2(maxWaitTimeout, dwPcoFrameIdx) << errstr;
+                goto _RETRY_WAIT; // retry when >0 (counting down up to 0) /
+                                    // <0 infinite
+            }
+            else
+            {
+                DEB_ALWAYS()
+                    << "\nWAITOBJ ERROR - TIMEOUT - ABORT "
+                    << DEB_VAR2(maxWaitTimeout, dwPcoFrameIdx) << errstr;
+                return pcoAcqWaitTimeout;
+            }
+        }
+        else
+        {
+            // WaitForMultipleObjects might return with 2 or more events set,
+            // so all buffers must be checked with WaitForSingleObject
+
+            // This will be true if at least one buffer is ready
+            is_one_buffer_ready = false;
+
+            for(bufIdx = 0; bufIdx < m_cam->m_pco_buffer_nrevents; bufIdx++)
+            {
+                if(WaitForSingleObject(m_allocBuff.bufferAllocEvent[bufIdx], 0) == WAIT_OBJECT_0)
+                {
+                    m_allocBuff.bufferReady[bufIdx] = 1;
+                    is_one_buffer_ready = true;
+                    if (dbgWaitobj)
+                    {
+                        pmsg = "... WAITOBJ 0 found";
+                        m_cam->m_tmpLog->add(pmsg);
+                        DEB_ALWAYS() << pmsg;
+                    }
+                }
+            }
+            if(is_one_buffer_ready) goto _RETRY;
+            else
+            {
                 printf("=== %s> WAITOBJ default ????\n", fnId);
                 return pcoAcqWaitError;
+            }
         }
 
     _WHILE_CONTINUE:
@@ -3085,7 +3066,6 @@ int BufferCtrlObj::_xferImagMultDoubleImage()
         usElapsedTimeSet(usStartPco);
 
         // --- image 1
-
         m_cam->_pco_GetImageEx(wSegment, dwPcoFrameIdxFirst, dwPcoFrameIdxLast,
                                sBufNr, _wArmWidth, _wArmHeight, _wBitPerPixel,
                                error);
