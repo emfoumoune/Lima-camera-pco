@@ -403,6 +403,7 @@ enum enumPcoFamily
     DimaxHS2 = 1 << 10,
     DimaxHS4 = 1 << 11,
     camRAM = 1 << 12,
+    Pixelfly = 1 << 13,
 };
 
 enum enumInterfaceTypes

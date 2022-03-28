@@ -150,6 +150,7 @@ const char *Camera::_xlatPcoCode2Str(int code, enumTblXlatCode2Str table,
         {CAMERATYPE_PCO_EDGE_HS, "PCO EDGE hs"},
         {CAMERATYPE_PCO_EDGE, "PCO EDGE"},
         {CAMERATYPE_PCO_EDGE_GL, "PCO EDGE GL"},
+		{CAMERATYPE_PCO_USBPIXELFLY, "PCO PIXELFLY"},
         {0, "NO_modelType"},
         {0, NULL}};
 
@@ -1490,6 +1491,12 @@ bool Camera::_isCameraType(unsigned long long tp)
 
         case CAMERATYPE_PCO4000:
             return !!(tp & (Pco4k | camRAM));
+			
+		case CAMERATYPE_PCO_USBPIXELFLY:
+			// Camera pixelfly has the same behaviour as the EDGE camera. 
+			// Due to a question of code simplicity, for each _isCameraType, Edge will be called. 
+			return !!(tp & (Edge));
+            DEB_TRACE() << "Pixelfly [exit] "; 
 
         default:
             break;
