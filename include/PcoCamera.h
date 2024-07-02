@@ -67,6 +67,10 @@
 
 #define CAMINFO_CAMERALINK (0x1LL << 16)
 #define CAMINFO_CAMERATYPE (0x1LL << 17)
+
+#define CAMINFO_STORAGEMODE (0x1LL << 18)
+#define CAMINFO_RINGBUFFER (0x1LL << 19)
+
 // ---------------------
 
 #define RESET_CLOSE_INTERFACE 100
@@ -471,6 +475,9 @@ enum enumTraceAcqId
 
 };
 
+#define STG_RECORDER_MODE   "RECORDER"
+#define STG_FIFO_MODE       "FIFO"
+
 #define SIZEARR_stcPcoHWIOSignal 10
 #define SIZESTR_PcoHWIOSignal 1024
 
@@ -604,6 +611,8 @@ namespace lima
 
             DWORD dwPixelRate, dwPixelRateRequested;
             double fTransferRateMHzMax;
+
+            DWORD dwStorageMode;
 
             WORD wLUT_Identifier, wLUT_Parameter;
 
@@ -1014,6 +1023,13 @@ namespace lima
             void getPixelRate(int &val);
             void setPixelRate(int val);
 
+            bool isStorageModeValidValue(std::string stg_mode);
+            void getStorageMode(std::string& stg_mode);
+            void setStorageMode(std::string stg_mode);
+
+            void getRingBuffer(bool &val);
+            void setRingBuffer(bool val);
+
             void getRollingShutterInfo(std::string &o_sn);
             void getRollingShutter(int &val);
             void setRollingShutter(int val);
@@ -1064,6 +1080,12 @@ namespace lima
             void _pco_GetPixelRate(DWORD &pixRate, DWORD &pixRateNext,
                                    int &error);
             // char *_pco_SetCameraSetup(DWORD dwSetup, int &error);
+
+            int _pco_GetStorageMode();
+            void _pco_SetStorageMode(WORD storageMode);
+
+            int _pco_GetRecorderSubmode();
+            void _pco_SetRecorderSubmode(WORD storageMode);
 
             void _pco_SetMetaDataMode(WORD wMetaDataMode, int &error);
 

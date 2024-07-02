@@ -80,6 +80,81 @@ void Camera::setPixelRate(int val)
 }
 
 //====================================================================
+// SIP STORAGE MODE - attributes
+//====================================================================
+bool Camera::isStorageModeValidValue(std::string stg_mode)
+{
+	std::string stg_upper;
+	std::transform(stg_mode.begin(), stg_mode.end(), std::back_inserter(stg_upper), ::toupper);
+	
+    return (stg_upper == STG_RECORDER_MODE || stg_upper == STG_FIFO_MODE);
+}
+
+void Camera::getStorageMode(std::string &stg_mode)
+{
+    DWORD wStorageMode;
+    wStorageMode = _pco_GetStorageMode();
+
+    switch((int)wStorageMode) 
+    {
+        case 0: stg_mode = STG_RECORDER_MODE; break;
+        case 1: stg_mode = STG_FIFO_MODE; break;
+        default: break;
+    }
+}
+
+void Camera::setStorageMode(std::string stg_mode)
+{
+    DWORD wStorageMode;
+
+	std::string stg_upper;
+	std::transform(stg_mode.begin(), stg_mode.end(), std::back_inserter(stg_upper), ::toupper);
+		
+    if (stg_upper == STG_RECORDER_MODE)
+        wStorageMode = 0x0000;
+    else if (stg_upper == STG_FIFO_MODE)
+        wStorageMode = 0x0001;
+    else
+        return;
+
+    _pco_SetStorageMode(wStorageMode);
+}
+
+//====================================================================
+// SIP RING Buffer - attributes
+//====================================================================
+void Camera::getRingBuffer(bool &val)
+{
+    std::string stg_mode;
+    getStorageMode(stg_mode);
+    if (stg_mode == STG_RECORDER_MODE)
+    {
+        int wRecSubmode = _pco_GetRecorderSubmode();
+        if (wRecSubmode == 1)
+            val = true;
+        else
+            val = false;
+    }
+    else
+        val = false;
+}
+
+void Camera::setRingBuffer(bool val)
+{
+    
+    WORD recSubmode;
+    recSubmode = (int)val;      // 0: sequence, 1: ring buffer
+    if (val)
+    {
+        // Set storage mode in recoder mode  
+        setStorageMode(STG_RECORDER_MODE);
+    }
+    // Next, Change Recorder submode
+    _pco_SetRecorderSubmode(recSubmode);
+
+}
+
+//====================================================================
 //====================================================================
 void Camera::getAcqTimeoutRetry(int &val)
 {

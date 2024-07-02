@@ -2323,6 +2323,120 @@ void Camera::_pco_GetPixelRate(DWORD &pixRateActual, DWORD &pixRateNext,
 
 #endif
 }
+
+//=================================================================================================
+// Storage mode
+//=================================================================================================
+// _pco_GetStorageMode
+int Camera::_pco_GetStorageMode()
+{
+    DEB_MEMBER_FUNCT();
+    DEF_FNID;
+    const char *msg;
+    WORD wStorageMode;
+	int err;
+
+#ifndef __linux__
+
+    PCO_FN2(err, msg, PCO_GetStorageMode, m_handle, &wStorageMode);
+    PCO_THROW_OR_TRACE(err, msg);
+ 
+#else
+
+    err = PCO_GetStorageMode(m_handle, &wStorageMode);
+    msg = "PCO_GetStorageMode";
+    PCO_CHECK_ERROR(err, msg);
+    if (err != 0)
+        wStorageMode = 0;
+
+#endif
+    m_pcoData->storage_mode = wStorageMode;
+	m_pcoData->dwStorageMode = wStorageMode;
+    return wStorageMode;
+}
+
+// _pco_SetStorageMode
+void Camera::_pco_SetStorageMode(WORD wStorageMode)
+{
+    DEB_MEMBER_FUNCT();
+    DEF_FNID;
+    int error = 0;
+    const char *msg;
+
+#ifndef __linux__
+
+    PCO_FN2(error, msg, PCO_SetStorageMode, m_handle, wStorageMode);
+    PCO_THROW_OR_TRACE(error, msg);
+
+#else
+
+    error = PCO_SetStorageMode(m_handle, wStorageMode);
+    msg = "PCO_SetStorageMode";
+    PCO_THROW_OR_TRACE(error, msg);
+
+#endif
+
+    m_pcoData->storage_mode = wStorageMode;
+	m_pcoData->dwStorageMode = wStorageMode;
+}
+
+//=================================================================================================
+//
+//=================================================================================================
+int Camera::_pco_GetRecorderSubmode()
+{
+    DEB_MEMBER_FUNCT();
+    DEF_FNID;
+    const char *msg;
+
+    WORD wRecSubmode;
+    int error;
+
+#ifndef __linux__
+
+    PCO_FN2(error, msg, PCO_GetRecorderSubmode, m_handle, &wRecSubmode);
+    if (error)
+    {
+        PCO_THROW_OR_TRACE(error, msg);
+    }
+#else
+
+    error = PCO_GetRecorderSubmode(m_handle, &wRecSubmode);
+    msg = "PCO_GetRecorderSubmode";
+    PCO_THROW_OR_TRACE(error, msg);
+    
+#endif
+	m_pcoData->recorder_submode = wRecSubmode;
+    return wRecSubmode;
+}
+
+// _pco_SetRecorderSubmode
+void Camera::_pco_SetRecorderSubmode(WORD recSubmode)
+{
+    DEB_MEMBER_FUNCT();
+    DEF_FNID;
+    const char *msg;
+
+    int error;
+
+#ifndef __linux__
+
+    PCO_FN2(error, msg, PCO_SetRecorderSubmode, m_handle, recSubmode);
+    if (error)
+    {
+        PCO_THROW_OR_TRACE(error, msg);
+    }
+#else
+
+    error = PCO_SetRecorderSubmode(m_handle, recSubmode);
+    msg = "PCO_SetRecorderSubmode";
+    PCO_THROW_OR_TRACE(error, msg);
+    
+#endif
+	m_pcoData->recorder_submode = recSubmode;
+}
+
+
 //=================================================================================================
 // ----------------------------------------- storage mode (recorder + sequence)
 // current storage mode

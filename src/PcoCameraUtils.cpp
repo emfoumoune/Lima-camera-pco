@@ -3108,6 +3108,25 @@ char *Camera::_camInfo(char *ptr, char *ptrMax, long long int flag)
             (int)m_pcoData->temperature.sSetpoint);
     }
 
+	//--------------- storage mode
+    if (flag & CAMINFO_STORAGEMODE)
+    {
+        ptr += __sprintfSExt(ptr, ptrMax - ptr, "* storageMode \n");
+        ptr += __sprintfSExt(ptr, ptrMax - ptr, "%s", m_pcoData->storage_mode ? STG_FIFO_MODE : STG_RECORDER_MODE);
+    }
+	
+	//--------------- ring buffer
+    if (flag & CAMINFO_RINGBUFFER)
+    {
+        ptr += __sprintfSExt(ptr, ptrMax - ptr, "* ringBuffer \n");
+		std::string ringBuffer;
+		if ((m_pcoData->storage_mode == 0 || m_pcoData->dwStorageMode == 0) && m_pcoData->recorder_submode == 1)
+            ringBuffer = "1";
+		else 
+			ringBuffer = "0";
+        ptr += __sprintfSExt(ptr, ptrMax - ptr, "%s", ringBuffer.c_str());
+    }
+	
     if (flag & CAMINFO_BLOCK)
     {
         lgbuff = ptrMax - ptr;
@@ -3117,7 +3136,7 @@ char *Camera::_camInfo(char *ptr, char *ptrMax, long long int flag)
                              "size[%lld B]) [end]\n",
                              lgbuff, used, lgbuffmax);
     }
-
+	
     return ptr;
 }
 
