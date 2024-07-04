@@ -1115,7 +1115,7 @@ void Camera::startAcq()
         return;
     }
 #endif
-
+	
     if (_isCameraType(Dimax | Pco2k | Pco4k))
     {
         int iRequestedFrames;
@@ -1126,35 +1126,59 @@ void Camera::startAcq()
         _pco_SetRecordingState(1, error);
 
         int forcedFifo = 0;
-        getRecorderForcedFifo(forcedFifo);
+        //getRecorderForcedFifo(forcedFifo);
+		
+		bool bRingBuffer;
+		getRingBuffer(bRingBuffer);
+		DEB_ALWAYS() << "Camera::startAcq() - bRingBuffer : " << bRingBuffer;
+		
+		if (!bRingBuffer)
+			getRecorderForcedFifo(forcedFifo);
 
 		DEB_ALWAYS() << "Camera::startAcq() - NbFrames: " << iRequestedFrames << ", forcedFifo: " << forcedFifo;
         if ((iRequestedFrames > 0) && (forcedFifo == 0))
-
         {
-			DEB_ALWAYS() << "Camera::startAcq() - triggerMode: " << trig_mode;
-            if ((trig_mode == ExtTrigSingle))
-            {
-				DEB_ALWAYS() << "Camera::startAcq() - _pco_acq_thread_dimax_trig_single... ";
-                _beginthread(_pco_acq_thread_dimax_trig_single, 0,
-                             (void *)this);
-            }
-            else
-            {
-				DEB_ALWAYS() << "Camera::startAcq() - _pco_acq_thread_dimax... ";
-                _beginthread(_pco_acq_thread_dimax, 0,
-                             (void *)this); // normal mode
-            }
+			// ICATHALES-590
+			if (bRingBuffer)
+			{
+				DEB_ALWAYS() << "Camera::startAcq() - _pco_acq_thread_ringBuffer 1 ... ";
+				_beginthread(_pco_acq_thread_ringBuffer, 0, (void *)this);
+			}
+			else 
+			{
+				DEB_ALWAYS() << "Camera::startAcq() - triggerMode: " << trig_mode;
+				if ((trig_mode == ExtTrigSingle))
+				{
+					DEB_ALWAYS() << "Camera::startAcq() - _pco_acq_thread_dimax_trig_single... ";
+					_beginthread(_pco_acq_thread_dimax_trig_single, 0,
+								 (void *)this);
+				}
+				else
+				{
+					DEB_ALWAYS() << "Camera::startAcq() - _pco_acq_thread_dimax... ";
+					_beginthread(_pco_acq_thread_dimax, 0,
+								 (void *)this); // normal mode
+				}
+			}
         }
         else
         {
-			DEB_ALWAYS() << "Camera::startAcq() - _pco_acq_thread_dimax_live... ";
-            _beginthread(_pco_acq_thread_dimax_live, 0, (void *)this);
+			// ICATHALES-590
+			if (bRingBuffer)
+			{
+				DEB_ALWAYS() << "Camera::startAcq() - _pco_acq_thread_ringBuffer 2 ... ";
+				_beginthread(_pco_acq_thread_ringBuffer, 0, (void *)this);
+			}
+			else 
+			{
+				DEB_ALWAYS() << "Camera::startAcq() - _pco_acq_thread_dimax_live... ";
+				_beginthread(_pco_acq_thread_dimax_live, 0, (void *)this);
+			}
         }
         m_pcoData->traceAcq.msStartAcqEnd = msElapsedTime(tStart);
         return;
     }
-
+	
     throw LIMA_HW_EXC(Error, "unkown camera type");
     return;
 }

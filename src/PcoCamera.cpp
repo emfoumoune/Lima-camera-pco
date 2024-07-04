@@ -882,6 +882,10 @@ void Camera::prepareAcq()
     DEF_FNID;
 
     DEB_ALWAYS() << _sprintComment(false, fnId, "[ENTRY]") << _checkLogFiles();
+	
+	bool bRingBuffer;
+	getRingBuffer(bRingBuffer);
+	DEB_ALWAYS() << "Camera::prepareAcq() - [in] bRingBuffer : " << bRingBuffer;
 
     int error;
 
@@ -952,7 +956,7 @@ void Camera::prepareAcq()
 
         getRecorderForcedFifo(forced);
 
-        if ((trig_mode == ExtTrigSingle) && (iRequestedFrames > 0))
+        if (bRingBuffer) // || ((trig_mode == ExtTrigSingle) && (iRequestedFrames > 0)))
         {
             mode = RecRing;
         }
@@ -1146,6 +1150,9 @@ void Camera::prepareAcq()
     //------------------------------------------------- checking nr of frames
     // for cams with memory
 #endif
+
+	getRingBuffer(bRingBuffer);
+	DEB_ALWAYS() << "Camera::prepareAcq() - [out] bRingBuffer : " << bRingBuffer;
 }
 
 //==========================================================================================================

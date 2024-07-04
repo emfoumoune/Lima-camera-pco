@@ -129,8 +129,8 @@ void Camera::getRingBuffer(bool &val)
     getStorageMode(stg_mode);
     if (stg_mode == STG_RECORDER_MODE)
     {
-        int wRecSubmode = _pco_GetRecorderSubmode();
-        if (wRecSubmode == 1)
+        WORD wRecSubmode = _pco_GetRecorderSubmode();
+        if (wRecSubmode == 0x0001)
             val = true;
         else
             val = false;
@@ -148,6 +148,7 @@ void Camera::setRingBuffer(bool val)
     {
         // Set storage mode in recoder mode  
         setStorageMode(STG_RECORDER_MODE);
+		m_sync->setTrigMode(TrigMode::ExtTrigSingle);
     }
     // Next, Change Recorder submode
     _pco_SetRecorderSubmode(recSubmode);
